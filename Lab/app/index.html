@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">  
+</head>
+
+<body>
+    <h1>Lista de películas</h1>
+    <div id="movies-list">
+
+    </div>
+    <button id="next">Next</button>
+    <script>
+
+        //Definir variables para controlar paginación
+        const limit = 5;
+        let start = 0;
+        let tot_peliculas = 0;
+
+
+        let obtenerDatos = () => {
+            // Endpoint URL
+            const endpoint = 'http://localhost/app/peliculas.php';
+
+            //TODO: calcular start
+            const url = endpoint + "?start=" + start + "&limit=" + limit;
+            // Uso de fetch para obtener los datos
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(HTTP error! Status: ${response.status});
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Usar los datos para mostrarlos en la pagina
+                    console.log(data);
+                    mostrarDatos(data.peliculas)
+                    tot_peliculas = data.total;
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        };
+
+        let mostrarDatos = (peliculas) => {
+            
+            var div = document.getElementById("movies-list");
+            let data = "";
+            peliculas.forEach(pelicula => {
+                data += "<tr>";
+                data += "<td>"+pelicula.nombre+"</td>"
+                data += "</tr>";
+            });
+
+            let contenido = "<table><thead><th>Nombre</th><th>Otro</th><th>Otro</th></thead></body>";
+            contenido += data;
+            contenido += "</tbody></table>";
+            div.innerHTML = contenido;
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            obtenerDatos();
+            //agregar botones y/o event listener para los botones
+
+        });
+    </script>
+</body>
+
+</html>
+5:12 p. m.
+
+
+
