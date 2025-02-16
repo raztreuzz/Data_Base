@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Variables
+PROJECT_DIR="/home/raztreuzz/Documentos/Github/Data_Base/Lab/app"
+APACHE_USER="www-data"
+APACHE_GROUP="www-data"
+
+# 1. Cambiar el propietario de los archivos y directorios a www-data (usuario de Apache)
+echo "Cambiando propietario de archivos y directorios a $APACHE_USER:$APACHE_GROUP..."
+sudo chown -R $APACHE_USER:$APACHE_GROUP $PROJECT_DIR
+
+# 2. Establecer permisos adecuados: Lectura, escritura y ejecución para el propietario, lectura y ejecución para otros
+echo "Estableciendo permisos en los archivos y directorios..."
+sudo chmod -R 755 $PROJECT_DIR
+
+# 3. Asegurarse de que los directorios dentro del proyecto tengan permisos 755
+echo "Asegurando permisos en directorios..."
+find $PROJECT_DIR -type d -exec sudo chmod 755 {} \;
+
+# 4. Asegurarse de que los archivos dentro del proyecto tengan permisos 644
+echo "Asegurando permisos en archivos..."
+find $PROJECT_DIR -type f -exec sudo chmod 644 {} \;
+
+# 5. Verificar la configuración del VirtualHost en Apache
+echo "Verificando archivo de configuración de Apache..."
+sudo apache2ctl configtest
+
+# 6. Reiniciar Apache para aplicar cambios
+echo "Reiniciando Apache para aplicar cambios..."
+sudo systemctl restart apache2
+
+# 7. Confirmar el estado de Apache
+echo "Verificando el estado de Apache..."
+sudo systemctl status apache2 | head -n 10
+
+echo "¡Permisos ajustados y Apache reiniciado con éxito!"
+

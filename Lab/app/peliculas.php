@@ -1,30 +1,33 @@
 <?php
+// Habilitar la visualización de errores
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-require_once __DIR__."/models/Pelicula.php";
+require_once "/home/raztreuzz/Documentos/Github/Data_Base/Lab/app/models/Pelicula.php";
 
+// Crear instancia de la clase Pelicula
+$pelicula = new Pelicula();
 
-// REST endpoint
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Parametros de la solicitud
-    $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
+// Obtener el número de página desde el parámetro GET (por defecto es la página 1)
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$limit = 5; // Número de películas por página
+$start = ($page - 1) * $limit; // Calcular el offset para la consulta
 
-    //Conexion al modelo para obtener datos
-  $pelicula = new Pelicula();
-  $peliculas = $pelicula->getPeliculas();
+// Obtener las películas paginadas
+$peliculas = $pelicula->getPeliculas($start, $limit);
 
-    $respuesta = array(
+// Obtener el total de películas para la paginación
+$totalPeliculas = $pelicula->getPeliculasCount();
+$totalPages = ceil($totalPeliculas / $limit);
+
+// Verificar si la consulta fue exitosa
+if (is_array($peliculas)) {
+    echo json_encode([
         'peliculas' => $peliculas,
-        'total' => $total
-
-    );
-
-    // Devuelve en formato json
-    header('Content-Type: application/json');
-    echo json_encode($respuesta);
-
+        'totalPages' => $totalPages,
+        'currentPage' => $page
+    ]);
 } else {
-    // Return error for unsupported HTTP methods
-    header('HTTP/1.1 405 Method Not Allowed');
-    header('Allow: GET');
-    echo "Method Not Allowed";
+    echo json_encode(['error' => $peliculas]);
 }
+?>

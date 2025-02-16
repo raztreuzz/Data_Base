@@ -1,77 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
-    <meta charset="UTF-8">  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Películas</title>
+    
+    <!-- Importando la fuente desde Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Estilos generales para modo oscuro */
+        body {
+            font-family: 'Poppins', sans-serif;  /* Cambié la fuente a Poppins */
+            background-color: #121212;  /* Fondo oscuro */
+            color: #e0e0e0;  /* Texto claro */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Lora', serif;  
+            font-size: 3em;
+            color: #e0e0e0;  /* Color de texto claro */
+            margin-top: 20px;
+            font-weight: 700;  /* Negrita */
+            text-align: center;
+            letter-spacing: 2px;  /* Espaciado entre letras */
+            text-transform: uppercase;  /* Mayúsculas para mayor sofisticación */
+            padding: 10px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);  /* Fondo degradado */
+            -webkit-background-clip: text; /* Para que el gradiente se aplique solo al texto */
+            color: transparent; /* Hacemos el texto transparente para que el gradiente se vea */
+        }
+
+        /* Contenedor de la lista de películas */
+        #movies-list {
+            width: 80%;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* Estilo para cada tarjeta de película */
+        .movie-card {
+            background-color: #1e1e1e;  /* Fondo oscuro para las tarjetas */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);  /* Sombra más fuerte */
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .movie-card-content {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .movie-card h3 {
+            font-size: 1.2em;
+            color: #fff;  /* Títulos en blanco */
+            margin: 10px 0;
+        }
+
+        .movie-card p {
+            color: #bbb;  /* Descripción en gris claro */
+            font-size: 0.9em;
+        }
+
+        /* Estilo para los botones de paginación */
+        .pagination-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .pagination-buttons button {
+            padding: 10px 20px;
+            background-color: #007bff;  /* Color del botón azul */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .pagination-buttons button:hover {
+            background-color: #0056b3;  /* Azul más oscuro al pasar el ratón */
+        }
+
+        .pagination-buttons button:disabled {
+            background-color: #444444;  /* Color gris para botones desactivados */
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Lista de películas</h1>
-    <div id="movies-list">
-
+    <h1>Explora el Mundo del Cine</h1>
+    <div id="movies-list"></div>
+    <div class="pagination-buttons">
+        <button id="previous" disabled>Anterior</button>
+        <button id="next">Siguiente</button>
     </div>
-    <button id="next">Next</button>
+
     <script>
+        let currentPage = 1;
+        const limit = 5; // Número de películas por página
+        let totalPages = 1;
 
-        //Definir variables para controlar paginación
-        const limit = 5;
-        let start = 0;
-        let tot_peliculas = 0;
+        // Obtener datos de las películas desde el backend
+        const obtenerDatos = () => {
+            const endpoint = 'http://localhost/peliculas.php'; // Asegúrate de que la ruta sea correcta
+            const url = `${endpoint}?page=${currentPage}&limit=${limit}`;
 
-
-        let obtenerDatos = () => {
-            // Endpoint URL
-            const endpoint = 'http://localhost/app/peliculas.php';
-
-            //TODO: calcular start
-            const url = endpoint + "?start=" + start + "&limit=" + limit;
-            // Uso de fetch para obtener los datos
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(HTTP error! Status: ${response.status});
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    // Usar los datos para mostrarlos en la pagina
-                    console.log(data);
-                    mostrarDatos(data.peliculas)
-                    tot_peliculas = data.total;
-                    console.log(data);
+                    if (data.peliculas) {
+                        mostrarDatos(data.peliculas);
+                        totalPages = data.totalPages;
+                        // Activar/desactivar botones según la página actual
+                        document.getElementById('previous').disabled = currentPage <= 1;
+                        document.getElementById('next').disabled = currentPage >= totalPages;
+                    }
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
                 });
         };
 
-        let mostrarDatos = (peliculas) => {
-            
-            var div = document.getElementById("movies-list");
-            let data = "";
+        // Mostrar los datos de las películas
+        const mostrarDatos = (peliculas) => {
+            const div = document.getElementById("movies-list");
+            let contenido = "";
+
             peliculas.forEach(pelicula => {
-                data += "<tr>";
-                data += "<td>"+pelicula.nombre+"</td>"
-                data += "</tr>";
+                contenido += `
+                    <div class="movie-card">
+                        <img src="${pelicula.imagen}" alt="Imagen de ${pelicula.nombre}">
+                        <div class="movie-card-content">
+                            <h3>${pelicula.nombre}</h3>
+                            <p><strong>Género:</strong> ${pelicula.genero}</p>
+                            <p><strong>Año:</strong> ${pelicula.anio}</p>
+                            <p><strong>Director:</strong> ${pelicula.director}</p>
+                        </div>
+                    </div>
+                `;
             });
 
-            let contenido = "<table><thead><th>Nombre</th><th>Otro</th><th>Otro</th></thead></body>";
-            contenido += data;
-            contenido += "</tbody></table>";
             div.innerHTML = contenido;
-        }
+        };
 
+        // Cargar las películas al cargar la página
+        document.addEventListener('DOMContentLoaded', obtenerDatos);
 
-        document.addEventListener('DOMContentLoaded', function () {
-            obtenerDatos();
-            //agregar botones y/o event listener para los botones
+        // Manejar el botón de "Siguiente"
+        document.getElementById("next").addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                obtenerDatos();
+            }
+        });
 
+        // Manejar el botón de "Anterior"
+        document.getElementById("previous").addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                obtenerDatos();
+            }
         });
     </script>
 </body>
 
 </html>
-5:12 p. m.
-
-
-
